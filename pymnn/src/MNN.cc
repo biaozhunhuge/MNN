@@ -430,14 +430,16 @@ namespace ec {
             size_t saveTensorsCount = PyTuple_Size(saveTensors);
             for (int i=0; i<saveTensorsCount; i++) {
                 PyObject *tensorNameItem = PyTuple_GetItem(saveTensors, i);
-                if (!PyString_Check(tensorNameItem)) {
+                //if (!PyString_Check(tensorNameItem)) {
+                if (!PyUnicode_Check(tensorNameItem)) {
                     PyErr_SetString(PyExc_Exception,
                                     "PyMNNInterpreter_createSession: saveTensors's member must be string");
                     return -1;
                 }
                 
 //                EDGE_COMPUTE_PRINTF("[getVectorByKey] key=%s, value=%s\n", key, PyString_AsString(tensorNameItem));
-                result.push_back(PyString_AsString(tensorNameItem));
+                //result.push_back(PyString_AsString(tensorNameItem));
+                result.push_back(PyUnicode_AsUTF8(tensorNameItem));
                 count++;
             }
         }
@@ -474,6 +476,7 @@ static PyObject* PyMNNInterpreter_createSession(PyMNNInterpreter *self, PyObject
     }
     
     ScheduleConfig config;
+    BackendConfig backendConfig;
     if (dict) {
         PyObject *numThread = PyDict_GetItemString(dict, "numThread");
         if (numThread) {
@@ -485,7 +488,29 @@ static PyObject* PyMNNInterpreter_createSession(PyMNNInterpreter *self, PyObject
             
             config.numThread = (int)PyLong_AsLong(numThread);
         }
-        
+
+        PyObject *type = PyDict_GetItemString(dict, "type");
+        if (type) {
+            if (!PyLong_Check(type)) {
+                PyErr_SetString(PyExc_Exception,
+                                "PyMNNInterpreter_createSession: type must be a integer");
+                return NULL;
+            }
+            
+            config.type = (MNNForwardType)PyLong_AsLong(type);
+        }
+
+        PyObject *precision = PyDict_GetItemString(dict, "precision");
+        if (precision) {
+            if (!PyLong_Check(precision)) {
+                PyErr_SetString(PyExc_Exception,
+                                "PyMNNInterpreter_createSession: precision must be a integer");
+                return NULL;
+            }
+            
+            backendConfig.precision = (BackendConfig::PrecisionMode)PyLong_AsLong(precision);
+        }
+
         if (-1 == ec::getVectorByKey(dict, "saveTensors", config.saveTensors)
             || -1 == ec::getVectorByKey(dict, "inputPaths", config.path.inputs)
             || -1 == ec::getVectorByKey(dict, "outputPaths", config.path.outputs)){
@@ -494,6 +519,7 @@ static PyObject* PyMNNInterpreter_createSession(PyMNNInterpreter *self, PyObject
 
     }
     
+    config.backendConfig = &backendConfig;
     Session *s = instance->interpreter->createSession(config);
     if (!s) {
         PyErr_SetString(PyExc_Exception,
