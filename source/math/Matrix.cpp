@@ -113,6 +113,47 @@ void Matrix::multi(Tensor* C, const Tensor* A, const Tensor* B) {
     }
 }
 
+void Matrix::gv_multi(Tensor* C, const Tensor* A, const Tensor* B) {
+	MNN_ASSERT(NULL != C);
+	MNN_ASSERT(NULL != B);
+	MNN_ASSERT(NULL != A);
+
+	MNN_ASSERT(2 == C->dimensions());
+	MNN_ASSERT(2 == B->dimensions());
+	MNN_ASSERT(2 == A->dimensions());
+
+	const auto a = A->host<float>();
+	const auto b = B->host<float>();
+	auto c = C->host<float>();
+
+	const int h = A->length(0);
+	const int k = A->length(1);
+	const int w = B->length(1);
+
+	const int aw = A->stride(0);
+	const int bw = B->stride(0);
+	const int cw = C->stride(0);
+
+	MNN_ASSERT(k == B->length(0));
+
+	int y = 0;
+	for (; y < h; ++y) {
+		int x = 0;
+		const auto aLine = a + int(y / 4) * 4 * aw + y % 4;
+		auto cLine = c + int(y / 4) * 4 * cw + y % 4;
+
+		for (; x < w; ++x) {
+			auto bColumn = b + x*4;
+			float sum = 0.0f;
+			for (int i = 0; i < k; ++i) {
+				sum += aLine[4*i] * bColumn[i];
+			}
+			cLine[x*4] = sum;
+		}
+	}
+}
+
+
 void Matrix::add(Tensor* C, const Tensor* A, const Tensor* B) {
     MNN_ASSERT(NULL != C);
     MNN_ASSERT(NULL != B);

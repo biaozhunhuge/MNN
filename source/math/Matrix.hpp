@@ -20,6 +20,7 @@ public:
     static Tensor* create(int w, int h);
 
     static void multi(Tensor* C, const Tensor* A, const Tensor* B);
+	static void gv_multi(Tensor* C, const Tensor* A, const Tensor* B);
     static void add(Tensor* C, const Tensor* A, const Tensor* B);
     static void divPerLine(Tensor* C, const Tensor* A, const Tensor* Line);
     static void invert(Tensor* dst, const Tensor* src);

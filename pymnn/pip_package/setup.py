@@ -173,7 +173,7 @@ def configure_extension_build():
        tools_extra_link_args += ['/WHOLEARCHIVE:mnn_bizcode.lib']
        tools_extra_link_args += ['/WHOLEARCHIVE:caffe.lib']
        tools_extra_link_args += ['/WHOLEARCHIVE:tensorflow.lib']
-       tools_extra_link_args += ['C:\\Users\\tianhang.yth\\Desktop\\protobuf\\vsprojects\\Release\\libprotobuf.lib']
+       tools_extra_link_args += ['E:\\github\\cpp\\protobuf\\vsprojects\\Release\\libprotobuf.lib']
 
     if BUILD_TYPE == 'DEBUG':
         if IS_WINDOWS:
